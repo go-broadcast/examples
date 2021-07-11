@@ -1,6 +1,7 @@
-# Redis example
+# gRPC example
 
-This example shows how to scale out [broadcast](https://github.com/go-broadcast/broadcast) using [go-broadcast/redis](https://github.com/go-broadcast/redis). 
+This example shows how to integrate [broadcast](https://github.com/go-broadcast/broadcast) with [gRPC](https://grpc.io/) server streams.
+The main piece of integration is in [server.go](https://github.com/go-broadcast/examples/blob/main/server.go) file 
 
 ## Running the example
 
@@ -8,17 +9,12 @@ This example shows how to scale out [broadcast](https://github.com/go-broadcast/
 ```bash
 git clone https://github.com/go-broadcast/examples.git
 ```
-2. start a Redis instance
+2. start the application
 ```bash
-docker run --name test-redis -d -p 6379:6379 redis
+cd ./examples/client
+npm install -y
+npx webpack
+cd ../cmd/grpc
+go run .
 ```
-3. start one instance of the application
-```bash
-cd ./examples/cmd/redis
-go run . -port 5200
-```
-4. start a second instance of the application
-```bash
-go run . -port 5300
-```
-5. open a browser and navigate to localhost:5200
+3. navigate to localhost:5200
