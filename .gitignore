@@ -19,3 +19,5 @@ node_modules/
 cmd/redis/redis
 cmd/grpc/grpc
 cmd/websockets/websockets
+
+static/grpc/bundle.js

@@ -36,7 +36,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	bcast, err := broadcast.New(
+	broadcaster, err := broadcast.New(
 		broadcast.WithDispatcher(dispatcher),
 	)
 	if err != nil {
@@ -46,10 +46,10 @@ func main() {
 	app.Get("/ws/:id", websocket.New(func(c *websocket.Conn) {
 		user := c.Params("id")
 
-		sub := bcast.Subscribe(func(data interface{}) {
+		subscription := broadcaster.Subscribe(func(data interface{}) {
 			c.WriteJSON(data)
 		})
-		bcast.JoinRoom(sub, "user-"+user, "chat-room")
+		broadcaster.JoinRoom(subscription, "user-"+user, "chat-room")
 
 		var (
 			msg []byte
@@ -61,10 +61,10 @@ func main() {
 				break
 			}
 
-			bcast.ToRoom(string(msg), "chat-room", "user-"+user)
+			broadcaster.ToRoom(string(msg), "chat-room", "user-"+user)
 		}
 
-		bcast.Unsubscribe(sub)
+		broadcaster.Unsubscribe(subscription)
 	}))
 
 	app.Listen(":" + strconv.Itoa(*port))
