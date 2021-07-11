@@ -1,4 +1,4 @@
-# Web sockets example
+# Redis example
 
 This example shows how to scale out [broadcast](https://github.com/go-broadcast/broadcast) using [go-broadcast/redis](https://github.com/go-broadcast/redis). 
 
