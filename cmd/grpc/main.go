@@ -1,8 +1,12 @@
 package main
 
 import (
+	"context"
 	"log"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/go-broadcast/broadcast"
 	"github.com/go-broadcast/examples"
@@ -18,12 +22,12 @@ func main() {
 	var opts []grpc.ServerOption
 	grpcServer := grpc.NewServer(opts...)
 
-	bcast, err := broadcast.New()
+	broadcaster, close, err := broadcast.New()
 	if err != nil {
 		log.Fatal(err)
 	}
 	service.RegisterChatServiceServer(grpcServer, &examples.ChatService{
-		Broadcaster: bcast,
+		Broadcaster: broadcaster,
 	})
 
 	// Wrapped GRPC server
@@ -49,7 +53,19 @@ func main() {
 		http.DefaultServeMux.ServeHTTP(rw, request)
 	})
 
+	go func() {
+		sigs := make(chan os.Signal, 1)
+		signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+		<-sigs
+		httpServer.Shutdown(context.Background())
+	}()
+
 	// Start HTTP server
 	log.Println("Listening on http://localhost:5200")
 	httpServer.ListenAndServe()
+	log.Println("stopped gRPC server")
+
+	close()
+	<-broadcaster.Done()
+	log.Println("stopped broadcaster")
 }

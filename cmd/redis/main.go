@@ -3,7 +3,10 @@ package main
 import (
 	"flag"
 	"log"
+	"os"
+	"os/signal"
 	"strconv"
+	"syscall"
 
 	"github.com/go-broadcast/broadcast"
 	"github.com/go-broadcast/redis"
@@ -36,7 +39,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	broadcaster, err := broadcast.New(
+	broadcaster, close, err := broadcast.New(
 		broadcast.WithDispatcher(dispatcher),
 	)
 	if err != nil {
@@ -67,5 +70,17 @@ func main() {
 		broadcaster.Unsubscribe(subscription)
 	}))
 
+	go func() {
+		sigs := make(chan os.Signal, 1)
+		signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+		<-sigs
+		app.Shutdown()
+	}()
+
 	app.Listen(":" + strconv.Itoa(*port))
+	log.Println("stopped fiber app")
+
+	close()
+	<-broadcaster.Done()
+	log.Println("stopped broadcaster")
 }

@@ -2,6 +2,9 @@ package main
 
 import (
 	"log"
+	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/go-broadcast/broadcast"
 	"github.com/gofiber/fiber/v2"
@@ -25,7 +28,7 @@ func main() {
 		return fiber.ErrUpgradeRequired
 	})
 
-	broadcaster, err := broadcast.New()
+	broadcaster, close, err := broadcast.New()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -54,5 +57,17 @@ func main() {
 		broadcaster.Unsubscribe(subscription)
 	}))
 
+	go func() {
+		sigs := make(chan os.Signal, 1)
+		signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+		<-sigs
+		app.Shutdown()
+	}()
+
 	app.Listen(":5200")
+	log.Println("stopped fiber app")
+
+	close()
+	<-broadcaster.Done()
+	log.Println("stopped broadcaster")
 }
